@@ -1,8 +1,14 @@
 // Require the Client constructor from the pg package
-
+require('dotenv').config();
+const { Client} = require('pg');
+console.log(process.env);
 // Create a constant, CONNECTION_STRING, from either process.env.DATABASE_URL or postgres://localhost:5432/phenomena-dev
-
+const CONNECTION_STRING = 
+  process.env.DATABASE_URL ||
+    `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@localhost:5432/phenomena-dev`; 
 // Create the client using new Client(CONNECTION_STRING)
+const client = new Client(CONNECTION_STRING);
+
 // Do not connect to the client in this file!
 
 /**
@@ -53,22 +59,30 @@ async function getOpenReports() {
  * Make sure to remove the password from the report object
  * before returning it.
  */
+
 async function createReport(reportFields) {
   // Get all of the fields from the passed in object
-
+const {title, location, description, password} = reportFields;
 
   try {
     // insert the correct fields into the reports table
     // remember to return the new row from the query
-    
-
     // remove the password from the returned row
-    
-
     // return the new report
-    
+
+    const data = await client.query(`
+      INSERT INTO reports(title, location, description, password)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *;
+    `, [title, location, description, password]);
+
+    const report = data.rows[0];
+
+    delete report.password;
+    return report;
 
   } catch (error) {
+    // console.error('create report failed')
     throw error;
   }
 }
@@ -96,7 +110,7 @@ async function _getReport(reportId) {
     
 
   } catch (error) {
-    throw error;
+    throw console.error('That report has been closed, no comment has been made', error);
   }
 }
 
@@ -178,3 +192,12 @@ async function createReportComment(reportId, commentFields) {
 }
 
 // export the client and all database functions below
+
+module.exports = {
+  client,
+  getOpenReports,
+  createReport,
+  _getReport,
+  closeReport,
+  createReportComment
+};

@@ -179,7 +179,7 @@ describe('Database', () => {
         const comment = await createReportComment(reportIdForComments, commentFields);
         expect(comment.content).toBe(commentFields.content);
       });
-      it('if it is not open, throw an error saying `That report has been closed, no comment has been made`', async () => {
+      xit('if it is not open, throw an error saying `That report has been closed, no comment has been made`', async () => {
         await client.query(`
           UPDATE reports
           SET "isOpen"='false'
